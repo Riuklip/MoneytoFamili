@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Contacto con Interfaz Alternante</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --whatsapp-color: #25D366;
+            --email-color: #EA4335;
+            --primary-color: #4a6fa5;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-radius: 10px;
+            --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .form-section, .calculator-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+        
+        .form-section {
+            border-left: 5px solid var(--primary-color);
+        }
+        
+        .form-section.whatsapp-active {
+            border-left-color: var(--whatsapp-color);
+        }
+        
+        .form-section.email-active {
+            border-left-color: var(--email-color);
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h2 i {
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2);
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .method-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .method-option {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .method-option i {
+            font-size: 1.8rem;
+        }
+        
+        .method-option.whatsapp:hover, .method-option.whatsapp.active {
+            border-color: var(--whatsapp-color);
+            background-color: rgba(37, 211, 102, 0.05);
+        }
+        
+        .method-option.email:hover, .method-option.email.active {
+            border-color: var(--email-color);
+            background-color: rgba(234, 67, 53, 0.05);
+        }
+        
+        .method-option.active .method-text {
+            font-weight: 700;
+        }
+        
+        .contact-field {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .contact-field.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: var(--transition);
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn:hover {
+            background-color: #3a5a8a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn.whatsapp-active {
+            background-color: var(--whatsapp-color);
+        }
+        
+        .btn.email-active {
+            background-color: var(--email-color);
+        }
+        
+        .calculator-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .calculator-result {
+            background-color: var(--light-color);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            margin-top: 25px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .result-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 15px 0;
+        }
+        
+        .result-text {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .currency-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #777;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .calculator-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Formulario de Contacto Inteligente</h1>
+            <p class="subtitle">Selecciona tu método de contacto preferido y calcula tus necesidades financieras</p>
+        </header>
+        
+        <div class="content">
+            <section class="form-section" id="formSection">
+                <h2><i class="fas fa-envelope"></i> Formulario de Contacto</h2>
+                
+                <div class="method-selector">
+                    <div class="method-option whatsapp active" id="whatsappOption">
+                        <i class="fab fa-whatsapp" style="color: var(--whatsapp-color);"></i>
+                        <span class="method-text">WhatsApp</span>
+                    </div>
+                    <div class="method-option email" id="emailOption">
+                        <i class="fas fa-envelope" style="color: var(--email-color);"></i>
+                        <span class="method-text">Correo Electrónico</span>
+                    </div>
+                </div>
+                
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label for="name">Nombre completo</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="contact-field whatsapp-field active" id="whatsappField">
+                        <div class="form-group">
+                            <label for="phone">Número de WhatsApp</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+1 234 567 8900" required>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-field email-field" id="emailField">
+                        <div class="form-group">
+                            <label for="email">Correo electrónico</label>
+                            <input type="email" id="email" name="email" placeholder="tu@email.com">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount">Monto</label>
+                        <input type="number" id="amount" name="amount" step="0.01" placeholder="0.00" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Descripción</label>
+                        <textarea id="description" name="description" placeholder="Describe tu consulta o necesidad..." required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn" id="submitBtn">
+                        <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
+                    </button>
+                </form>
+            </section>
+            
+            <section class="calculator-section">
+                <h2><i class="fas fa-calculator"></i> Calculadora de Divisas</h2>
+                
+                <div class="calculator-inputs">
+                    <div class="form-group">
+                        <label for="fromCurrency">De:</label>
+                        <select id="fromCurrency">
+                            <option value="USD">Dólar Estadounidense (USD)</option>
+                            <option value="EUR">Euro (EUR)</option>
+                            <option value="MXN" selected>Peso Mexicano (MXN)</option>
+                            <option value="COP">Peso Colombiano (COP)</option>
+                            <option value="ARS">Peso Argentino (ARS)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="toCurrency">A:</label>
+                        <select id="toCurrency">
+                            <option value="USD" selected>Dólar Estadounidense (USD)</option>
+                            <option value="EUR">Euro (EUR)</option>
+                            <option value="MXN">Peso Mexicano (MXN)</option>
+                            <option value="COP">Peso Colombiano (COP)</option>
+                            <option value="ARS">Peso Argentino (ARS)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="initialAmount">Cantidad inicial</label>
+                    <input type="number" id="initialAmount" step="0.01" placeholder="Ingrese la cantidad" value="1000">
+                </div>
+                
+                <button id="calculateBtn" class="btn">
+                    <i class="fas fa-calculator"></i> Calcular Conversión
+                </button>
+                
+                <div class="calculator-result">
+                    <p>Resultado de la conversión:</p>
+                    <div class="result-value" id="resultValue">58.82</div>
+                    <p class="result-text" id="resultText">1000 MXN = 58.82 USD</p>
+                    <div class="currency-info">
+                        <span id="fromInfo">1 MXN = 0.0588 USD</span>
+                        <span id="toInfo">1 USD = 17.00 MXN</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <footer>
+            <p>&copy; 2023 - Todos los derechos reservados | Formulario de Contacto Inteligente</p>
+        </footer>
+    </div>
+
+    <script>
+        // Elementos del DOM para el formulario
+        const whatsappOption = document.getElementById('whatsappOption');
+        const emailOption = document.getElementById('emailOption');
+        const whatsappField = document.getElementById('whatsappField');
+        const emailField = document.getElementById('emailField');
+        const formSection = document.getElementById('formSection');
+        const submitBtn = document.getElementById('submitBtn');
+        const contactForm = document.getElementById('contactForm');
+        
+        // Elementos del DOM para la calculadora
+        const fromCurrency = document.getElementById('fromCurrency');
+        const toCurrency = document.getElementById('toCurrency');
+        const initialAmount = document.getElementById('initialAmount');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resultValue = document.getElementById('resultValue');
+        const resultText = document.getElementById('resultText');
+        const fromInfo = document.getElementById('fromInfo');
+        const toInfo = document.getElementById('toInfo');
+        
+        // Tasas de cambio de ejemplo (ficticias)
+        const exchangeRates = {
+            'USD': { 'EUR': 0.85, 'MXN': 17.0, 'COP': 3800, 'ARS': 100, 'USD': 1 },
+            'EUR': { 'USD': 1.18, 'MXN': 20.0, 'COP': 4500, 'ARS': 118, 'EUR': 1 },
+            'MXN': { 'USD': 0.0588, 'EUR': 0.05, 'COP': 224, 'ARS': 5.88, 'MXN': 1 },
+            'COP': { 'USD': 0.00026, 'EUR': 0.00022, 'MXN': 0.00446, 'ARS': 0.026, 'COP': 1 },
+            'ARS': { 'USD': 0.01, 'EUR': 0.0085, 'MXN': 0.17, 'COP': 38.46, 'ARS': 1 }
+        };
+        
+        // Función para cambiar entre WhatsApp y Email
+        function toggleContactMethod(method) {
+            if (method === 'whatsapp') {
+                whatsappOption.classList.add('active');
+                emailOption.classList.remove('active');
+                whatsappField.classList.add('active');
+                emailField.classList.remove('active');
+                formSection.classList.remove('email-active');
+                formSection.classList.add('whatsapp-active');
+                submitBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Enviar por WhatsApp';
+                submitBtn.classList.remove('email-active');
+                submitBtn.classList.add('whatsapp-active');
+            } else {
+                emailOption.classList.add('active');
+                whatsappOption.classList.remove('active');
+                emailField.classList.add('active');
+                whatsappField.classList.remove('active');
+                formSection.classList.remove('whatsapp-active');
+                formSection.classList.add('email-active');
+                submitBtn.innerHTML = '<i class="fas fa-envelope"></i> Enviar por Correo';
+                submitBtn.classList.remove('whatsapp-active');
+                submitBtn.classList.add('email-active');
+            }
+        }
+        
+        // Event listeners para cambiar método de contacto
+        whatsappOption.addEventListener('click', () => toggleContactMethod('whatsapp'));
+        emailOption.addEventListener('click', () => toggleContactMethod('email'));
+        
+        // Función para calcular la conversión de divisas
+        function calculateConversion() {
+            const from = fromCurrency.value;
+            const to = toCurrency.value;
+            const amount = parseFloat(initialAmount.value) || 0;
+            
+            let result = 0;
+            if (exchangeRates[from] && exchangeRates[from][to]) {
+                result = amount * exchangeRates[from][to];
+            }
+            
+            resultValue.textContent = result.toFixed(2);
+            resultText.textContent = `${amount} ${from} = ${result.toFixed(2)} ${to}`;
+            
+            // Actualizar información de tasas
+            const rateFromTo = exchangeRates[from][to];
+            const rateToFrom = exchangeRates[to][from];
+            fromInfo.textContent = `1 ${from} = ${rateFromTo.toFixed(4)} ${to}`;
+            toInfo.textContent = `1 ${to} = ${rateToFrom.toFixed(4)} ${from}`;
+        }
+        
+        // Event listener para el botón de calcular
+        calculateBtn.addEventListener('click', calculateConversion);
+        
+        // Calcular automáticamente al cambiar valores
+        fromCurrency.addEventListener('change', calculateConversion);
+        toCurrency.addEventListener('change', calculateConversion);
+        initialAmount.addEventListener('input', calculateConversion);
+        
+        // Calcular al cargar la página
+        document.addEventListener('DOMContentLoaded', calculateConversion);
+        
+        // Manejo del envío del formulario
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const method = whatsappOption.classList.contains('active') ? 'WhatsApp' : 'Correo electrónico';
+            const name = document.getElementById('name').value;
+            const contact = method === 'WhatsApp' ? document.getElementById('phone').value : document.getElementById('email').value;
+            const amount = document.getElementById('amount').value;
+            const description = document.getElementById('description').value;
+            
+            // Aquí puedes agregar la lógica para enviar el formulario
+            alert(`Formulario enviado por ${method}:\n\nNombre: ${name}\nContacto: ${contact}\nMonto: ${amount}\nDescripción: ${description}`);
+            
+            // Limpiar formulario después del envío
+            contactForm.reset();
+            
+            // Restablecer a WhatsApp por defecto
+            toggleContactMethod('whatsapp');
+        });
+    </script>
+</body>
+</html>
