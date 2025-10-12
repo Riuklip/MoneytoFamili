@@ -1,7 +1,7 @@
 
         // Inicializar EmailJS con tu Public Key
         // Reemplaza 'YOUR_PUBLIC_KEY' con tu clave pública de EmailJS
-        emailjs.init('YOUR_PUBLIC_KEY');
+        emailjs.init('KQwj_Sm-penUoskR0');
         
         // Número de contacto fijo para WhatsApp
         const whatsappContactNumber = "+5356096338"; // Cambia este número por el número de contacto real
@@ -198,11 +198,11 @@
                 currency: currency,
                 amount: amount,
                 message: description,
-                to_email: 'info@remesasacuba.com' // Cambia por el email de destino
+                to_email: "eliclpere@gmail.com" // Cambia por el email de destino
             };
-            
+            console.log(templateParams)
             // Reemplaza 'YOUR_SERVICE_ID' y 'YOUR_TEMPLATE_ID' con tus valores de EmailJS
-            emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+            emailjs.send("service_m6o29ew","template_6zky109",templateParams)
                 .then(function(response) {
                     console.log('Correo enviado con éxito:', response);
                     alert('¡Correo enviado con éxito! Nos pondremos en contacto contigo pronto.');
