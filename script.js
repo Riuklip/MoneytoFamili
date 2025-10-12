@@ -4,7 +4,7 @@
         emailjs.init('YOUR_PUBLIC_KEY');
         
         // Número de contacto fijo para WhatsApp
-        const whatsappContactNumber = "+1234567890"; // Cambia este número por el número de contacto real
+        const whatsappContactNumber = "+5356096338"; // Cambia este número por el número de contacto real
         
         // Elementos del DOM para el formulario
         const whatsappOption = document.getElementById('whatsappOption');
