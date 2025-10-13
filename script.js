@@ -37,12 +37,12 @@
         
         // Tasas de cambio y comisiones por plataforma
         const exchangeRates = {
-            'USD': { rate: 1.0, commission: 0.03 },
-            'EUR': { rate: 1.18, commission: 0.035 }
+            'USD': { rate: 1.0, commission: 0.0 },
+            'EUR': { rate: 1.16, commission: 0.0 }
         };
         
         const platformCommissions = {
-            'zelle': 0.015,
+            'zelle': 0.1,
             'paypal': 0.05
         };
         
@@ -302,3 +302,4 @@
                 }
             });
         });
+
