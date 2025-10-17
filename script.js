@@ -62,7 +62,7 @@ function verificarAjusteComisiones(montoBase, platformCommissionRate) {
     }
     
     // Verificamos si al sumar nuestra comisión ajustada se supera el límite de $100
-    if (montoBase + nuestraComision > 110 && montoBase < 100) {
+    if (montoBase + nuestraComision >= 110 && montoBase < 100) {
         // Si supera $100, aplicar comisión del 10% sobre el monto base
         nuestraComision = montoBase * 0.10;
     }
@@ -407,3 +407,4 @@ document.querySelectorAll('nav a').forEach(anchor => {
     });
 
 });
+
