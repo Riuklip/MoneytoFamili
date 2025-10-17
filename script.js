@@ -42,7 +42,7 @@ const platformCommissions = {
 
 // Función para calcular nuestra comisión según el monto
 function calcularNuestraComision(monto) {
-    if (monto < 60) {
+    if (monto+10 <= 60) {
         return 5; // Comisión fija de $5 para montos menores a $60
     } else if (monto < 100) {
         return 10; // Comisión fija de $10 para montos entre $60 y $100
@@ -140,7 +140,7 @@ function calculateAmount() {
         // Modo RECIBIR: Calcular cuánto hay que enviar para recibir la cantidad deseada
         let amountToSend;
         
-        if (amount < 60) {
+        if (amount+10 <= 60) {
             // Para recibir menos de $60, nuestra comisión es $5
             amountToSend = (amount + 5) / (1 - platformCommissionRate);
         } else if (amount < 100) {
