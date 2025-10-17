@@ -42,7 +42,7 @@ const platformCommissions = {
 
 // Función para calcular nuestra comisión según el monto
 function calcularNuestraComision(monto) {
-    if (monto+10 <= 60) {
+    if (monto <= 70) {
         return 5; // Comisión fija de $5 para montos menores a $60
     } else if (monto < 100) {
         return 10; // Comisión fija de $10 para montos entre $60 y $100
@@ -104,7 +104,11 @@ function calculateAmount() {
     }
     
     const platformCommissionRate = platformCommissions[platform];
+    if(mode==¨send¨){
     const ourCommission = calcularNuestraComision(amount);
+        }else{
+            ourCommission = calcularNuestraComision(amount+(0.05*amount));
+        }
     let result, platformCommission, finalAmount;
     
     if (mode === 'send') {
@@ -382,3 +386,4 @@ document.querySelectorAll('nav a').forEach(anchor => {
     });
 
 });
+
