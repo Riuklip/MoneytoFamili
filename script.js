@@ -140,7 +140,7 @@ function calculateAmount() {
         // Modo RECIBIR: Calcular cuánto hay que enviar para recibir la cantidad deseada
         let amountToSend;
         
-        if (amount+10 <= 60) {
+        if (amount <= 70) {
             // Para recibir menos de $60, nuestra comisión es $5
             amountToSend = (amount + 5) / (1 - platformCommissionRate);
         } else if (amount < 100) {
@@ -380,4 +380,5 @@ document.querySelectorAll('nav a').forEach(anchor => {
             }
         }
     });
+
 });
