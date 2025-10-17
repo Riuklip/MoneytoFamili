@@ -34,7 +34,7 @@
     <div class="container">
         <section class="hero" id="home">
             <h1>Remesas a Cuba</h1>
-            <p class="subtitle">Envía dinero a Cuba de forma rápida y segura. Calcula el monto exacto y contáctanos para completar tu transacción.</p>
+            <p class="subtitle">Envía dinero a Cuba de forma rápida y segura. Calcula el monto exacto y contáctanos directo al Whatsapp para completar tu transacción.</p>
         </section>
         
         <section id="form">
@@ -74,15 +74,7 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="contactCurrency">Moneda</label>
-                            <select id="contactCurrency" name="contactCurrency" required>
-                                <option value="USD">Dólar Estadounidense (USD)</option>
-                                <option value="EUR">Euro (EUR)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="amount">Monto a enviar</label>
+                            <label for="amount">Monto a enviar (USD)</label>
                             <input type="number" id="amount" name="amount" step="0.01" placeholder="0.00" required>
                         </div>
                         
@@ -102,29 +94,35 @@
                     
                     <div class="commission-notice">
                         <i class="fas fa-exclamation-circle"></i>
-                        <p>Se aplica un 10% de comisión adicional antes del cálculo de impuestos y tasas de cambio.</p>
+                        <div>
+                            <p><strong>Comisiones:</strong></p>
+                            <p>• Menos de $60: $5 USD</p>
+                            <p>• Entre $60 y $100: $10 USD</p>
+                            <p>• Más de $100: 10%</p>
+                            <p>• Comisión de plataforma: Zelle 0% | PayPal 5%</p>
+                        </div>
                     </div>
                     
                     <form id="calculatorForm">
                         <div class="form-group">
-                            <label for="initialAmount">Cantidad a enviar</label>
+                            <label for="calculationMode">Modo de cálculo</label>
+                            <select id="calculationMode" required>
+                                <option value="send">Deseo enviar</option>
+                                <option value="receive">Deseo recibir</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="initialAmount" id="amountLabel">Cantidad a enviar (USD)</label>
                             <input type="number" id="initialAmount" step="0.01" placeholder="Ingrese la cantidad" value="100" required>
                         </div>
                         
                         <div class="calculator-inputs">
                             <div class="form-group">
-                                <label for="fromCurrency">Moneda de origen</label>
-                                <select id="fromCurrency" required>
-                                    <option value="USD">Dólar Estadounidense (USD)</option>
-                                    <option value="EUR">Euro (EUR)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
                                 <label for="paymentPlatform">Plataforma de pago</label>
                                 <select id="paymentPlatform" required>
-                                    <option value="zelle">Zelle</option>
-                                    <option value="paypal">PayPal</option>
+                                    <option value="zelle">Zelle (0%)</option>
+                                    <option value="paypal">PayPal (5%)</option>
                                 </select>
                             </div>
                         </div>
@@ -140,40 +138,32 @@
                     </form>
                     
                     <div class="calculator-result">
-                        <p>Resultado del cálculo:</p>
+                        <p id="resultTitle">Resultado del cálculo:</p>
                         <div class="result-value" id="resultValue">0.00</div>
                         <p class="result-text" id="resultText">Ingrese los datos y haga clic en Calcular</p>
                         
                         <div class="calculation-breakdown" id="breakdownContainer" style="display: none;">
                             <div class="breakdown-item">
-                                <span>Cantidad original:</span>
+                                <span id="breakdownOriginalLabel">Cantidad original:</span>
                                 <span id="breakdownOriginal">0.00</span>
                             </div>
                             <div class="breakdown-item">
-                                <span>Comisión del 10%:</span>
+                                <span>Comisión nuestra:</span>
                                 <span id="breakdownCommission">0.00</span>
                             </div>
                             <div class="breakdown-item">
-                                <span>Subtotal:</span>
-                                <span id="breakdownSubtotal">0.00</span>
-                            </div>
-                            <div class="breakdown-item">
-                                <span>Tasa de cambio:</span>
-                                <span id="breakdownRate">0.00</span>
-                            </div>
-                            <div class="breakdown-item">
-                                <span>Comisión por plataforma:</span>
+                                <span>Comisión plataforma:</span>
                                 <span id="breakdownPlatform">0.00</span>
                             </div>
                             <div class="breakdown-item">
-                                <span>Monto final:</span>
+                                <span id="breakdownFinalLabel">Monto final:</span>
                                 <span id="breakdownFinal">0.00</span>
                             </div>
                         </div>
                         
                         <div class="currency-info">
-                            <span id="fromInfo">Tasa de cambio: 0.00</span>
-                            <span id="toInfo">Comisión total: 0.00</span>
+                            <span id="fromInfo">Comisión nuestra: 0.00</span>
+                            <span id="toInfo">Comisión plataforma: 0.00</span>
                         </div>
                     </div>
                 </div>
@@ -185,6 +175,6 @@
         </footer>
     </div>
 
-   <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

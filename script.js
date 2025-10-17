@@ -12,17 +12,18 @@ const emailField = document.getElementById('emailField');
 const formSection = document.getElementById('formSection');
 const submitBtn = document.getElementById('submitBtn');
 const contactForm = document.getElementById('contactForm');
-const contactCurrency = document.getElementById('contactCurrency');
 
 // Elementos del DOM para la calculadora
 const calculatorForm = document.getElementById('calculatorForm');
-const fromCurrency = document.getElementById('fromCurrency');
+const calculationMode = document.getElementById('calculationMode');
 const paymentPlatform = document.getElementById('paymentPlatform');
-const desiredAmount = document.getElementById('initialAmount'); // Cantidad deseada en Cuba
+const amountLabel = document.getElementById('amountLabel');
+const desiredAmount = document.getElementById('initialAmount');
 const calculateBtn = document.getElementById('calculateBtn');
 const fillContactBtn = document.getElementById('fillContactBtn');
 const resultValue = document.getElementById('resultValue');
 const resultText = document.getElementById('resultText');
+const resultTitle = document.getElementById('resultTitle');
 const fromInfo = document.getElementById('fromInfo');
 const toInfo = document.getElementById('toInfo');
 const breakdownContainer = document.getElementById('breakdownContainer');
@@ -33,66 +34,21 @@ const navLinks = document.querySelectorAll('nav a');
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const navMenu = document.getElementById('navMenu');
 
-// Variables globales
-let eurotousd = { tasa: 1.0 }; // Valor por defecto
-let exchangeRates = {};
-let platformCommissions = {};
+// Comisiones de plataforma
+const platformCommissions = {
+    'zelle': 0.0,  // 1.5%
+    'paypal': 0.05   // 5%
+};
 
-// Función para obtener tasa de cambio
-async function obtenerTasaCambioEURUSD() {
-    try {
-        console.log('🔄 Obteniendo tasa de cambio EUR/USD...');
-        
-        const response = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD');
-        
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        const tasaEURUSD = data.rates.USD;
-        const fechaActualizacion = new Date().toLocaleString('es-ES');
-        
-        console.log('✅ Tasa de cambio obtenida exitosamente:');
-        console.log(`💰 1 EUR = ${tasaEURUSD} USD`);
-        console.log(`🕒 Actualizado: ${fechaActualizacion}`);
-        
-        return {
-            tasa: tasaEURUSD,
-            fecha: fechaActualizacion,
-            monedaOrigen: 'EUR',
-            monedaDestino: 'USD'
-        };
-        
-    } catch (error) {
-        console.error('❌ Error obteniendo la tasa de cambio:', error);
-        
-        // Retornar un valor por defecto en caso de error
-        return {
-            tasa: 1.08, // Valor por defecto razonable
-            fecha: new Date().toLocaleString('es-ES'),
-            error: error.message
-        };
+// Función para calcular nuestra comisión según el monto
+function calcularNuestraComision(monto) {
+    if (monto < 60) {
+        return 5; // Comisión fija de $5 para montos menores a $60
+    } else if (monto < 100) {
+        return 10; // Comisión fija de $10 para montos entre $60 y $100
+    } else {
+        return monto * 0.10; // 10% para montos de $100 o más
     }
-}
-
-// Función para inicializar las tasas y comisiones
-function inicializarTasas() {
-    exchangeRates = {
-        'EUR': { 
-            rate: eurotousd.tasa, // 1 EUR = X USD
-            commission: 0.10 // 10% de comisión nuestra
-        },
-        'USD': { 
-            rate: 1.0, // 1 USD = 1 USD
-            commission: 0.10 // 10% de comisión nuestra
-        }
-    };
-    
-    platformCommissions = {
-        'zelle': 0.015,  // 1.5%
-        'paypal': 0.05   // 5%
-    };
 }
 
 // Función para cambiar entre WhatsApp y Email
@@ -120,99 +76,114 @@ function toggleContactMethod(method) {
     }
 }
 
-// Función para calcular el monto necesario basado en la moneda de origen
-async function calculateAmount() {
-    const from = fromCurrency.value;
+// Función para actualizar la etiqueta según el modo
+function updateAmountLabel() {
+    const mode = calculationMode.value;
+    if (mode === 'send') {
+        amountLabel.textContent = 'Cantidad a enviar (USD)';
+        desiredAmount.placeholder = 'USD a enviar';
+    } else {
+        amountLabel.textContent = 'Cantidad a recibir (USD)';
+        desiredAmount.placeholder = 'USD a recibir';
+    }
+}
+
+// Función para calcular el monto según el modo seleccionado
+function calculateAmount() {
+    const mode = calculationMode.value;
     const platform = paymentPlatform.value;
-    const targetAmount = parseFloat(desiredAmount.value) || 0;
+    const amount = parseFloat(desiredAmount.value) || 0;
     
-    if (targetAmount <= 0) {
+    if (amount <= 0) {
         resultValue.textContent = "0.00";
         resultText.textContent = "Ingrese una cantidad válida";
-        fromInfo.textContent = "Tasa de cambio: 0.00";
-        toInfo.textContent = "Comisión total: 0.00";
+        fromInfo.textContent = "Comisión nuestra: 0.00";
+        toInfo.textContent = "Comisión plataforma: 0.00";
         if (breakdownContainer) breakdownContainer.style.display = 'none';
         return null;
     }
     
-    // Asegurar que las tasas estén inicializadas
-    if (!exchangeRates[from] || !platformCommissions[platform]) {
-        console.log('⏳ Esperando inicialización de tasas...');
-        return null;
-    }
+    const platformCommissionRate = platformCommissions[platform];
+    const ourCommission = calcularNuestraComision(amount);
+    let result, platformCommission, finalAmount;
     
-    const exchangeRate = exchangeRates[from].rate;
-    const ourCommission = exchangeRates[from].commission; // 10%
-    const platformCommission = platformCommissions[platform];
-    
-    let amountNeeded, currencySymbol, resultCurrency;
-    
-    if (from === 'USD') {
-        // Si la moneda de origen es USD, calcular directamente en USD
-        amountNeeded = targetAmount / ((1 - ourCommission) * (1 - platformCommission));
-        currencySymbol = 'USD';
-        resultCurrency = 'USD';
-    } else {
-        // Si la moneda de origen es EUR, calcular EUR necesarios para obtener los USD deseados
-        amountNeeded = targetAmount / (exchangeRate * (1 - ourCommission) * (1 - platformCommission));
-        currencySymbol = 'EUR';
-        resultCurrency = 'EUR';
-    }
-    
-    // Calcular desglose
-    const ourCommissionAmount = amountNeeded * ourCommission;
-    const amountAfterOurCommission = amountNeeded - ourCommissionAmount;
-    
-    let amountInUSD, platformCommissionAmount;
-    
-    if (from === 'USD') {
-        amountInUSD = amountAfterOurCommission;
-        platformCommissionAmount = amountInUSD * platformCommission;
-    } else {
-        amountInUSD = amountAfterOurCommission * exchangeRate;
-        platformCommissionAmount = amountInUSD * platformCommission;
-    }
-    
-    const finalAmountAfterCommissions = amountInUSD * (1 - platformCommission);
-    
-    // Mostrar resultados
-    resultValue.textContent = amountNeeded.toFixed(2);
-    resultText.textContent = `Necesita transferir: ${amountNeeded.toFixed(2)} ${resultCurrency}`;
-    fromInfo.textContent = `Para recibir: ${targetAmount} USD en Cuba`;
-    
-    if (from === 'EUR') {
-        toInfo.textContent = `Tasa: 1 EUR = ${exchangeRate.toFixed(4)} USD`;
-    } else {
-        toInfo.textContent = `Transacción directa en USD`;
-    }
-    
-    // Mostrar desglose del cálculo
-    if (breakdownContainer) {
-        document.getElementById('breakdownOriginal').textContent = `${targetAmount.toFixed(2)} USD`;
-        document.getElementById('breakdownCommission').textContent = `${ourCommissionAmount.toFixed(2)} ${resultCurrency} (${(ourCommission * 100).toFixed(0)}%)`;
-        document.getElementById('breakdownSubtotal').textContent = `${amountAfterOurCommission.toFixed(2)} ${resultCurrency}`;
+    if (mode === 'send') {
+        // Modo ENVIAR: Calcular cuánto se recibirá después de las comisiones
+        platformCommission = amount * platformCommissionRate;
+        const amountAfterPlatform = amount - platformCommission;
         
-        if (from === 'EUR') {
-            document.getElementById('breakdownRate').textContent = `1 EUR = ${exchangeRate.toFixed(4)} USD`;
-            document.getElementById('breakdownPlatform').textContent = `${platformCommissionAmount.toFixed(2)} USD (${(platformCommission * 100).toFixed(1)}%)`;
+        // Aplicar nuestra comisión
+        if (amount < 100) {
+            // Comisión fija para montos menores a $100
+            finalAmount = amountAfterPlatform - ourCommission;
         } else {
-            document.getElementById('breakdownRate').textContent = `Transacción directa en USD`;
-            document.getElementById('breakdownPlatform').textContent = `${platformCommissionAmount.toFixed(2)} USD (${(platformCommission * 100).toFixed(1)}%)`;
+            // Comisión porcentual para montos de $100 o más
+            finalAmount = amountAfterPlatform * (1 - 0.10);
         }
         
-        document.getElementById('breakdownFinal').textContent = `${amountNeeded.toFixed(2)} ${resultCurrency}`;
+        result = finalAmount;
+        
+        // Actualizar UI
+        resultTitle.textContent = "Resultado del cálculo:";
+        resultValue.textContent = `${result.toFixed(0)}.00`;
+        resultText.textContent = `Recibirás: $${result.toFixed(0)}.00 USD en Cuba`;    
+        
+        // Actualizar desglose
+        document.getElementById('breakdownOriginalLabel').textContent = "Cantidad enviada:";
+        document.getElementById('breakdownOriginal').textContent = `$${amount.toFixed(2)} USD`;
+        document.getElementById('breakdownCommission').textContent = `$${ourCommission.toFixed(2)} USD`;
+        document.getElementById('breakdownPlatform').textContent = `$${platformCommission.toFixed(2)} USD`;
+        document.getElementById('breakdownFinalLabel').textContent = "Monto que recibirás:";
+        document.getElementById('breakdownFinal').textContent = `$${result.toFixed(0)}.00 USD`;
+        
+    } else {
+        // Modo RECIBIR: Calcular cuánto hay que enviar para recibir la cantidad deseada
+        let amountToSend;
+        
+        if (amount < 60) {
+            // Para recibir menos de $60, nuestra comisión es $5
+            amountToSend = (amount + 5) / (1 - platformCommissionRate);
+        } else if (amount < 100) {
+            // Para recibir entre $60 y $100, nuestra comisión es $10
+            amountToSend = (amount + 10) / (1 - platformCommissionRate);
+        } else {
+            // Para recibir $100 o más, nuestra comisión es 10%
+            amountToSend = amount / (0.9 * (1 - platformCommissionRate));
+        }
+        
+        result = amountToSend;
+        platformCommission = amountToSend * platformCommissionRate;
+        
+        // Actualizar UI
+        resultTitle.textContent = "Resultado del cálculo:";
+        resultValue.textContent = result.toFixed(2);
+        resultText.textContent = `Debes enviar: $${result.toFixed(2)} USD`;
+        
+        // Actualizar desglose
+        document.getElementById('breakdownOriginalLabel').textContent = "Cantidad a recibir:";
+        document.getElementById('breakdownOriginal').textContent = `$${amount.toFixed(2)} USD`;
+        document.getElementById('breakdownCommission').textContent = `$${ourCommission.toFixed(2)} USD`;
+        document.getElementById('breakdownPlatform').textContent = `$${platformCommission.toFixed(2)} USD`;
+        document.getElementById('breakdownFinalLabel').textContent = "Monto a enviar:";
+        document.getElementById('breakdownFinal').textContent = `$${result.toFixed(2)} USD`;
+    }
+    
+    // Mostrar información de comisiones
+    fromInfo.textContent = `Comisión nuestra: $${ourCommission.toFixed(2)} USD`;
+    toInfo.textContent = `Comisión ${platform}: $${platformCommission.toFixed(2)} USD`;
+    
+    // Mostrar desglose
+    if (breakdownContainer) {
         breakdownContainer.style.display = 'block';
     }
     
     return {
-        targetAmount: targetAmount,
-        amountNeeded: amountNeeded,
-        currency: resultCurrency,
+        mode: mode,
+        amount: amount,
         platform: platform,
-        exchangeRate: exchangeRate,
-        ourCommission: ourCommissionAmount,
-        platformCommission: platformCommissionAmount,
-        finalAmountUSD: finalAmountAfterCommissions
+        result: result,
+        ourCommission: ourCommission,
+        platformCommission: platformCommission
     };
 }
 
@@ -226,10 +197,9 @@ if (fillContactBtn) {
     fillContactBtn.addEventListener('click', function() {
         const calculation = calculateAmount();
         
-        if (calculation && calculation.amountNeeded > 0) {
+        if (calculation && calculation.result > 0) {
             // Rellenar el formulario de contacto
-            document.getElementById('amount').value = calculation.amountNeeded.toFixed(2);
-            document.getElementById('contactCurrency').value = calculation.currency;
+            document.getElementById('amount').value = calculation.result.toFixed(2);
             
             // Crear una descripción automática
             const platformNames = {
@@ -237,7 +207,13 @@ if (fillContactBtn) {
                 'zelle': 'Zelle'
             };
             
-            const description = `Deseo enviar ${calculation.amountNeeded.toFixed(2)} ${calculation.currency} para recibir ${calculation.targetAmount} USD en Cuba mediante ${platformNames[calculation.platform]}. Cálculo realizado con la calculadora.`;
+            let description;
+            if (calculation.mode === 'send') {
+                description = `Deseo enviar $${calculation.amount.toFixed(2)} USD para recibir $${calculation.result.toFixed(2)} USD en Cuba mediante ${platformNames[calculation.platform]}. Cálculo realizado con la calculadora.`;
+            } else {
+                description = `Deseo recibir $${calculation.amount.toFixed(2)} USD en Cuba, para lo cual debo enviar $${calculation.result.toFixed(2)} USD mediante ${platformNames[calculation.platform]}. Cálculo realizado con la calculadora.`;
+            }
+            
             document.getElementById('description').value = description;
             
             // Desplazar al formulario de contacto
@@ -246,7 +222,11 @@ if (fillContactBtn) {
             });
             
             // Mostrar mensaje de confirmación
-            alert(`El formulario ha sido rellenado: debe transferir ${calculation.amountNeeded.toFixed(2)} ${calculation.currency} para recibir ${calculation.targetAmount} USD en Cuba`);
+            if (calculation.mode === 'send') {
+                alert(`El formulario ha sido rellenado: enviarás $${calculation.amount.toFixed(2)} USD para recibir $${calculation.result.toFixed(2)} USD en Cuba`);
+            } else {
+                alert(`El formulario ha sido rellenado: debes enviar $${calculation.result.toFixed(2)} USD para recibir $${calculation.amount.toFixed(2)} USD en Cuba`);
+            }
         } else {
             alert("Por favor, calcule primero un monto válido antes de rellenar el formulario de contacto.");
         }
@@ -254,27 +234,21 @@ if (fillContactBtn) {
 }
 
 // Calcular automáticamente al cambiar valores
-if (fromCurrency) fromCurrency.addEventListener('change', calculateAmount);
+if (calculationMode) {
+    calculationMode.addEventListener('change', function() {
+        updateAmountLabel();
+        calculateAmount();
+    });
+}
 if (paymentPlatform) paymentPlatform.addEventListener('change', calculateAmount);
 if (desiredAmount) desiredAmount.addEventListener('input', calculateAmount);
 
 // Inicialización cuando el DOM está listo
-document.addEventListener('DOMContentLoaded', async function() {
-    // Obtener tasa de cambio primero
-    eurotousd = await obtenerTasaCambioEURUSD();
-    console.log('Tasa cargada:', eurotousd);
-    
-    // Inicializar tasas con el valor obtenido
-    inicializarTasas();
-    
+document.addEventListener('DOMContentLoaded', function() {
     // Inicializar calculadora y formulario
+    updateAmountLabel();
     calculateAmount();
     toggleContactMethod('whatsapp');
-    
-    // Actualizar el placeholder para mayor claridad
-    if (desiredAmount) {
-        desiredAmount.placeholder = "USD deseados en Cuba";
-    }
     
     // Configurar efecto de header al hacer scroll
     if (mainHeader) {
@@ -332,12 +306,11 @@ function sendWhatsAppMessage(message) {
 }
 
 // Función para enviar correo con EmailJS
-function sendEmail(name, email, currency, amount, description, phone = '') {
+function sendEmail(name, email, amount, description, phone = '') {
     const templateParams = {
         from_name: name,
         from_email: email,
         user_phone: phone,
-        currency: currency,
         amount: amount,
         message: description,
         to_email: "eliclpere@gmail.com"
@@ -361,7 +334,6 @@ if (contactForm) {
         const method = whatsappOption.classList.contains('active') ? 'WhatsApp' : 'Correo electrónico';
         const name = document.getElementById('name').value;
         const contact = method === 'WhatsApp' ? document.getElementById('phone').value : document.getElementById('email').value;
-        const currency = document.getElementById('contactCurrency').value;
         const amount = document.getElementById('amount').value;
         const description = document.getElementById('description').value;
         
@@ -371,12 +343,12 @@ if (contactForm) {
         }
         
         // Crear mensaje predeterminado
-        const message = `Hola, me interesa enviar remesas a Cuba.\n\n*Información del solicitante:*\nNombre: ${name}\n${method === 'WhatsApp' ? 'Teléfono: ' + contact : 'Email: ' + contact}\n\n*Detalles de la transacción:*\nMoneda: ${currency}\nMonto: ${amount}\nDescripción: ${description}\n\nPor favor, contactarme para proceder con la transacción.`;
+        const message = `Hola, me interesa enviar remesas a Cuba.\n\n*Información del solicitante:*\nNombre: ${name}\n${method === 'WhatsApp' ? 'Teléfono: ' + contact : 'Email: ' + contact}\n\n*Detalles de la transacción:*\nMonto: $${amount} USD\nDescripción: ${description}\n\nPor favor, contactarme para proceder con la transacción.`;
         
         if (method === 'WhatsApp') {
             sendWhatsAppMessage(message);
         } else {
-            sendEmail(name, contact, currency, amount, description);
+            sendEmail(name, contact, amount, description);
         }
         
         // Limpiar formulario después del envío
