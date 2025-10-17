@@ -34,21 +34,51 @@ const navLinks = document.querySelectorAll('nav a');
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const navMenu = document.getElementById('navMenu');
 
-// Comisiones de plataforma
+// Comisiones de plataforma (Zelle 0%, PayPal 5%)
 const platformCommissions = {
-    'zelle': 0.0,  // 1.5%
+    'zelle': 0.00,  // 0%
     'paypal': 0.05   // 5%
 };
 
 // Función para calcular nuestra comisión según el monto
 function calcularNuestraComision(monto) {
-    if (monto <= 70) {
-        return 5; // Comisión fija de $5 para montos menores a $60
+    if (monto < 70) {
+        return 5; // Comisión fija de $5 para montos menores a $70
     } else if (monto < 100) {
-        return 10; // Comisión fija de $10 para montos entre $60 y $100
+        return 10; // Comisión fija de $10 para montos entre $70 y $100
     } else {
         return monto * 0.10; // 10% para montos de $100 o más
     }
+}
+
+// Función para verificar y ajustar comisiones en modo RECIBIR
+function verificarAjusteComisiones(montoBase, platformCommissionRate) {
+    let nuestraComision = calcularNuestraComision(montoBase);
+    
+    // Verificamos si al sumar nuestra comisión inicial se supera el límite de $70
+    if (montoBase + nuestraComision >= 70 && montoBase < 70) {
+        // Si supera $70, aplicar comisión de $10
+        nuestraComision = 10;
+    }
+    
+    // Verificamos si al sumar nuestra comisión ajustada se supera el límite de $100
+    if (montoBase + nuestraComision > 100 && montoBase < 100) {
+        // Si supera $100, aplicar comisión del 10% sobre el monto base
+        nuestraComision = montoBase * 0.10;
+    }
+    
+    // Calculamos el monto total sin comisión de plataforma
+    let montoTotalSinPlataforma = montoBase + nuestraComision;
+    
+    // Aplicamos comisión de plataforma si es PayPal
+    let montoFinal = platformCommissionRate > 0 
+        ? montoTotalSinPlataforma / (1 - platformCommissionRate)
+        : montoTotalSinPlataforma;
+    
+    return {
+        montoFinal: montoFinal,
+        nuestraComision: nuestraComision
+    };
 }
 
 // Función para cambiar entre WhatsApp y Email
@@ -104,12 +134,7 @@ function calculateAmount() {
     }
     
     const platformCommissionRate = platformCommissions[platform];
-    if(mode==='send'){
-    const ourCommission = calcularNuestraComision(amount);
-        }else{
-            ourCommission = calcularNuestraComision(amount+(0.05*amount));
-        }
-    let result, platformCommission, finalAmount;
+    let result, platformCommission, finalAmount, ourCommission;
     
     if (mode === 'send') {
         // Modo ENVIAR: Calcular cuánto se recibirá después de las comisiones
@@ -117,20 +142,26 @@ function calculateAmount() {
         const amountAfterPlatform = amount - platformCommission;
         
         // Aplicar nuestra comisión
-        if (amount < 100) {
-            // Comisión fija para montos menores a $100
+        if (amountAfterPlatform < 70) {
+            // Comisión fija para montos menores a $70
+            ourCommission = 5;
+            finalAmount = amountAfterPlatform - ourCommission;
+        } else if (amountAfterPlatform < 100) {
+            // Comisión fija para montos entre $70 y $100
+            ourCommission = 10;
             finalAmount = amountAfterPlatform - ourCommission;
         } else {
             // Comisión porcentual para montos de $100 o más
-            finalAmount = amountAfterPlatform * (1 - 0.10);
+            ourCommission = amountAfterPlatform * 0.10;
+            finalAmount = amountAfterPlatform - ourCommission;
         }
         
         result = finalAmount;
         
         // Actualizar UI
         resultTitle.textContent = "Resultado del cálculo:";
-        resultValue.textContent = `${result.toFixed(0)}.00`;
-        resultText.textContent = `Recibirás: $${result.toFixed(0)}.00 USD en Cuba`;    
+        resultValue.textContent = result.toFixed(2);
+        resultText.textContent = `Recibirás: $${result.toFixed(2)} USD en Cuba`;
         
         // Actualizar desglose
         document.getElementById('breakdownOriginalLabel').textContent = "Cantidad enviada:";
@@ -138,25 +169,15 @@ function calculateAmount() {
         document.getElementById('breakdownCommission').textContent = `$${ourCommission.toFixed(2)} USD`;
         document.getElementById('breakdownPlatform').textContent = `$${platformCommission.toFixed(2)} USD`;
         document.getElementById('breakdownFinalLabel').textContent = "Monto que recibirás:";
-        document.getElementById('breakdownFinal').textContent = `$${result.toFixed(0)}.00 USD`;
+        document.getElementById('breakdownFinal').textContent = `$${result.toFixed(2)} USD`;
         
     } else {
         // Modo RECIBIR: Calcular cuánto hay que enviar para recibir la cantidad deseada
-        let amountToSend;
-        
-        if (amount <= 70) {
-            // Para recibir menos de $60, nuestra comisión es $5
-            amountToSend = (amount + 5) / (1 - platformCommissionRate);
-        } else if (amount < 100) {
-            // Para recibir entre $60 y $100, nuestra comisión es $10
-            amountToSend = (amount + 10) / (1 - platformCommissionRate);
-        } else {
-            // Para recibir $100 o más, nuestra comisión es 10%
-            amountToSend = amount / (0.9 * (1 - platformCommissionRate));
-        }
-        
-        result = amountToSend;
-        platformCommission = amountToSend * platformCommissionRate;
+        // Aplicar el rectificador que verifica si se superan los límites
+        const ajuste = verificarAjusteComisiones(amount, platformCommissionRate);
+        result = ajuste.montoFinal;
+        ourCommission = ajuste.nuestraComision;
+        platformCommission = result * platformCommissionRate;
         
         // Actualizar UI
         resultTitle.textContent = "Resultado del cálculo:";
@@ -384,7 +405,4 @@ document.querySelectorAll('nav a').forEach(anchor => {
             }
         }
     });
-
 });
-
-
