@@ -104,7 +104,7 @@ function calculateAmount() {
     }
     
     const platformCommissionRate = platformCommissions[platform];
-    if(mode==¨send¨){
+    if(mode==='send'){
     const ourCommission = calcularNuestraComision(amount);
         }else{
             ourCommission = calcularNuestraComision(amount+(0.05*amount));
@@ -386,4 +386,5 @@ document.querySelectorAll('nav a').forEach(anchor => {
     });
 
 });
+
 
