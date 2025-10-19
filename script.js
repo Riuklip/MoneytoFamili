@@ -123,7 +123,6 @@ const calculationMode = document.getElementById('calculationMode');
 const amountLabel = document.getElementById('amountLabel');
 const initialAmount = document.getElementById('initialAmount');
 const paymentPlatform = document.getElementById('paymentPlatform');
-const calculateBtn = document.getElementById('calculateBtn');
 const fillContactBtn = document.getElementById('fillContactBtn');
 const resultValue = document.getElementById('resultValue');
 const resultText = document.getElementById('resultText');
@@ -146,6 +145,7 @@ let lastCalculation = {
     platformCommission: 0
 };
 
+// Event listeners para cálculo automático
 calculationMode.addEventListener('change', function() {
     if (this.value === 'send') {
         amountLabel.textContent = 'Cantidad a enviar (USD)';
@@ -156,11 +156,11 @@ calculationMode.addEventListener('change', function() {
         breakdownOriginalLabel.textContent = 'Cantidad a recibir:';
         breakdownFinalLabel.textContent = 'Monto a enviar:';
     }
+    calculate(); // Recalcular automáticamente
 });
 
-calculateBtn.addEventListener('click', function() {
-    calculate();
-});
+initialAmount.addEventListener('input', calculate);
+paymentPlatform.addEventListener('change', calculate);
 
 fillContactBtn.addEventListener('click', function() {
     // Rellenar el campo de monto en el formulario de contacto
@@ -199,7 +199,9 @@ function calculate() {
     const platform = paymentPlatform.value;
 
     if (isNaN(amount) || amount <= 0) {
-        alert('Por favor, ingrese una cantidad válida.');
+        resultValue.textContent = '0.00';
+        resultText.textContent = 'Ingrese una cantidad válida';
+        breakdownContainer.style.display = 'none';
         return;
     }
 
@@ -213,18 +215,17 @@ function calculate() {
         ourCommission = amount * 0.10;
     }
 
-    // Comisión de la plataforma
-    let platformCommission = 0;
-    if (platform === 'paypal') {
-        platformCommission = amount * 0.05;
-    }
-
-    let totalCommission = ourCommission + platformCommission;
-
     let result = 0;
+    let platformCommission = 0;
+
     if (mode === 'send') {
         // Enviar: cantidad original - comisiones
-        result = amount - totalCommission;
+        // Comisión de la plataforma (se aplica al monto original)
+        if (platform === 'paypal') {
+            platformCommission = amount * 0.05;
+        }
+        
+        result = amount - ourCommission - platformCommission;
         resultValue.textContent = result.toFixed(2);
         resultText.textContent = `El destinatario recibirá: $${result.toFixed(2)} USD`;
         
@@ -245,8 +246,16 @@ function calculate() {
             platformCommission: platformCommission
         };
     } else {
-        // Recibir: cantidad original + comisiones
-        result = amount + totalCommission;
+        // Recibir: cantidad deseada + nuestra comisión + comisión plataforma
+        // Primero calculamos el monto después de nuestra comisión
+        const amountAfterOurCommission = amount + ourCommission;
+        
+        // Comisión de la plataforma (se aplica al monto después de nuestra comisión)
+        if (platform === 'paypal') {
+            platformCommission = amountAfterOurCommission * 0.05;
+        }
+        
+        result = amountAfterOurCommission + platformCommission;
         resultValue.textContent = result.toFixed(2);
         resultText.textContent = `Usted debe enviar: $${result.toFixed(2)} USD`;
         
@@ -271,5 +280,5 @@ function calculate() {
     breakdownContainer.style.display = 'block';
 }
 
-// Inicializar calculadora
+// Inicializar calculadora al cargar la página
 calculate();
