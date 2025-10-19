@@ -1,6 +1,55 @@
 // Inicializar EmailJS (reemplaza con tu User ID)
 emailjs.init("KQwj_Sm-penUoskR0");
+// Menú hamburguesa
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const navMenu = document.getElementById('navMenu');
+const whatsappBusinessNumber = '+5356096338'; // Reemplaza con tu número
 
+// Y luego en la función de envío:
+
+// Función para alternar el menú
+function toggleMobileMenu() {
+    navMenu.classList.toggle('show');
+    
+    // Cambiar icono entre hamburguesa y X
+    const icon = mobileMenuBtn.querySelector('i');
+    if (navMenu.classList.contains('show')) {
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-times');
+    } else {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+    }
+}
+
+// Evento para el botón del menú
+mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+
+// Cerrar menú al hacer clic en un enlace
+const navLinks = document.querySelectorAll('#navMenu a');
+navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+        if (navMenu.classList.contains('show')) {
+            toggleMobileMenu();
+        }
+    });
+});
+
+// Cerrar menú al hacer clic fuera de él
+document.addEventListener('click', (e) => {
+    if (navMenu.classList.contains('show') && 
+        !navMenu.contains(e.target) && 
+        !mobileMenuBtn.contains(e.target)) {
+        toggleMobileMenu();
+    }
+});
+
+// Cerrar menú al redimensionar la ventana si se vuelve a tamaño desktop
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 768 && navMenu.classList.contains('show')) {
+        toggleMobileMenu();
+    }
+});
 // Cambio entre WhatsApp y Email
 const whatsappOption = document.getElementById('whatsappOption');
 const emailOption = document.getElementById('emailOption');
@@ -49,7 +98,7 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
         
         const message = `Hola, me llamo ${name}. ${description} ${contactInfo}`;
         const encodedMessage = encodeURIComponent(message);
-        window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        window.open(`https://wa.me/${whatsappBusinessNumber}?text=${encodedMessage}`, '_blank');
     } else {
         // Enviar por Email
         const currentTime = new Date().toLocaleString();
